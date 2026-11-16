@@ -1,0 +1,43 @@
+name: Windows VST3 download
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-vst3-download
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: windows-2022
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Build and package
+        shell: pwsh
+        run: |
+          cmake -S . -B build -A x64
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cmake --build build --config Release --target OctaveForge_VST3
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Compress-Archive -LiteralPath 'build/OctaveForge_artefacts/Release/VST3/Octave Forge.vst3' -DestinationPath 'Octave-Forge-Windows-x64.zip' -ErrorAction Stop
+      - name: Refresh rolling download
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $zip = 'Octave-Forge-Windows-x64.zip'
+          gh release view rolling-windows --repo $env:GITHUB_REPOSITORY --json tagName 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload rolling-windows $zip --clobber --repo $env:GITHUB_REPOSITORY
+          } else {
+            gh release create rolling-windows $zip --repo $env:GITHUB_REPOSITORY --target $env:GITHUB_SHA --title 'Rolling Windows x64 VST3' --notes 'The Windows x64 ZIP is refreshed after successful builds from main.' --prerelease --latest=false
+          }
+          exit $LASTEXITCODE
