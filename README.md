@@ -1,5 +1,10 @@
 # Octave Forge
 
+[Download Windows x64 VST3 ZIP](https://github.com/grommie122/Octave-Forge/releases/download/rolling-windows/Octave-Forge-Windows-x64.zip)
+
+GitHub Actions refreshes this ZIP after successful builds from `main`.
+
+
 Octave Forge is a Windows x64 VST3 pitch shifter. Down Tune shifts all three voices from 0 to -12 semitones. The fundamental, octave up, and octave down have independent levels.
 
 ## Build
